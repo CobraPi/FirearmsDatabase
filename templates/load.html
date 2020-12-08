@@ -1,0 +1,69 @@
+{% extends 'index.html' %}
+
+{% block load %}
+
+<div class="col-md-7">
+        <table class="table table-stripped table-hover table-bordered table-bg bg-white">
+            <thead>
+                <td>First Name</td>
+                <td>Last Name</td>
+                <td>Birthday</td>
+                <td>Address</td>
+                <td>Phone</td>
+                <td>Social Security Number</td>
+            </thead>
+            <tbody>
+            {% for owner in owners %}
+                <tr>
+                    <td>{{ owner.first_name }}</td>
+                    <td>{{ owner.last_name }}</td>
+                    <td>{{ owner.birthday }}</td>
+                    <td>{{ owner.address }}</td>
+                    <td>{{ owner.phone }}</td>
+                    <td>{{ owner.ssn }}</td>
+                    <td>
+                        <a href="/edit_owner/{{owner.ssn}}" class="btn btn-secondary">edit</a>
+                        <a href="/delete_owner/{{owner.ssn}}" class="btn btn-danger btn-delete">delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+{% if guns %}
+
+    <table class="table table-striped table-hover table-bordered table-sm bg-white">
+        <thead>
+        <tr>
+            <td>Serial Number</td>
+            <td>Type</td>
+            <td>Manufacturer</td>
+            <td>Model</td>
+            <td>Caliber</td>
+            <td>Country of Origin</td>
+            <td>Sold By</td>
+            <td>Seller Address</td>
+            <td>Operations</td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for gun in guns %}
+            <tr>
+                <td>{{gun.serial_number}}</td>
+                <td>{{gun.type}}</td>
+                <td>{{gun.name}}</td>
+                <td>{{gun.model}}</td>
+                <td>{{ gun.caliber }}</td>
+                <td>{{ gun.country_of_origin }}</td>
+                <td>{{ gun['Seller.name'] }}</td>
+                <td>{{ gun.address }}</td>
+                <td>
+                    <a href="/edit_gun/{{gun.serial_number}}" class="btn btn-secondary">edit</a>
+                    <a href="/delete_gun/{{gun.serial_number}}" class="btn btn-danger btn-delete">delete</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
