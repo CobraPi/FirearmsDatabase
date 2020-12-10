@@ -111,8 +111,9 @@ def add_gun():
         db.connection.commit()
         cur.execute(seller_query)
         db.connection.commit()
-        data = cur.execute("")
-        cur.execute(manufacturer_query)
+        pk_check = cur.execute("SELECT EXISTS (SELECT * FROM Manufacturer WHERE model='" + str(model) + "');")
+        if not pk_check:
+            cur.execute(manufacturer_query)
         db.connection.commit()
         flash('New Firearm Registered')
         return render_template('index.html')
@@ -147,12 +148,12 @@ def update_gun(id):
 
 
 @app.route('/delete_gun/<string:id>', methods=['GET', 'POST'])
-def delete(id):
+def delete_gun(id):
     cur = db.connection.cursor()
     gun_query = "DELETE FROM Gun WHERE serial_number = {0}".format(id)
     cur.execute(gun_query)
-    seller_query = "DELETE FROM Seller WHERE serial_number = {0}".format(id)
     db.connection.commit()
+    seller_query = "DELETE FROM Seller WHERE serial_number = {0}".format(id)
     cur.execute(seller_query)
     db.connection.commit()
     flash('Gun Deleted Successfully')
