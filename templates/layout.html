@@ -10,11 +10,11 @@
   <body>
 
     <!-- NAVIGATION  -->
-    <nav class="navbar navbar-dark bg-dark">
-      <a class="navbar-brand" href="/">Firearms Database App</a>
-      <form class="navbar" action="{{ url_for('search') }}" method="POST">
+    <nav class="navbar bg-dark">
+      <a class="navbar-brand" style="color:grey" href="/">Firearms Database App</a>
+      <form class="navbar-dark" action="{{ url_for('search') }}" method="POST">
           <h1>Search Database</h1><br>
-          <input type="text" name="search_val" id="search_val" placeholder="Search Database">
+          <input type="text" style="color:black" name="search_val" id="search_val" placeholder="Search Database">
           <select name="search_param" id="search_param">
               <option value="last_name" selected="selected">Last Name</option>
               <option value="address" selected="selected">Address</option>
