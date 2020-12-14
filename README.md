@@ -1,5 +1,5 @@
 # how to run
-- cd firearms_db/
+- cd FirearmsDatabase/
 - source venv/bin/activate
 - pip install -r requirements.txt
 - python main.py
