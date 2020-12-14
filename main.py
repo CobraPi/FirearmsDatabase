@@ -243,6 +243,6 @@ def _jinja2_filter_datetime(date, fmt=None):
     format='%b %d, %Y'
     return date.strftime(format)
 
-# starting the app
+# starting the firearms_db
 if __name__ == "__main__":
     app.run()
