@@ -43,21 +43,27 @@ def test():
 
 @app.route('/search', methods=['GET', 'POST'])
 def search(search_value=None, search_param=None):
-    if request.method == 'POST':
-        cur = db.connection.cursor()
-        search_value = request.form['search_val']
-        search_param = request.form['search_param']
-        owner_query = "SELECT * FROM Owner WHERE " + search_param + "='" + search_value + "';"
-        cur.execute(owner_query)
-        owner_results = cur.fetchall()
-        ssn = owner_results[0]['ssn']
-        gun_query = "SELECT DISTINCT * FROM Gun, Seller, Manufacturer WHERE Gun.ssn = {0} AND Gun.serial_number = Seller.serial_number AND Gun.model=Manufacturer.model;".format(ssn)
-        cur.execute(gun_query)
-        gun_results = cur.fetchall()
-        db.connection.commit()
-        cur.close()
-        info = ["Individual", "Guns Owned by " + owner_results[0]['first_name'] + " " + owner_results[0]['last_name']]
-        return render_template('index.html', owners=owner_results, guns=gun_results, info=info)
+    try:
+        if request.method == 'POST':
+            cur = db.connection.cursor()
+            search_value = request.form['search_val']
+            search_param = request.form['search_param']
+            owner_query = "SELECT DISTINCT * FROM Owner WHERE " + search_param + "='" + search_value + "';"
+            cur.execute(owner_query)
+            owner_results = cur.fetchall()
+            ssn = owner_results[0]['ssn']
+            gun_query = "SELECT DISTINCT * FROM Gun, Seller, Manufacturer WHERE Gun.ssn = {0} AND Gun.serial_number = Seller.serial_number AND Gun.model=Manufacturer.model;".format(ssn)
+            cur.execute(gun_query)
+            gun_results = cur.fetchall()
+            db.connection.commit()
+            cur.close()
+            info = ["Individual", "Guns Owned by " + owner_results[0]['first_name'] + " " + owner_results[0]['last_name']]
+            return render_template('index.html', owners=owner_results, guns=gun_results, info=info)
+
+    except Exception as e:
+        flash(str(e))
+        return redirect(url_for('Index'))
+
 
 @app.route('/add_owner', methods=['POST'])
 def add_owner():
@@ -80,7 +86,7 @@ def add_owner():
             db.connection.commit()
             flash('Contact Added successfully')
             cur.close()
-            return render_template('index.html')
+            return redirect(url_for('Index'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('Index'))
@@ -97,21 +103,31 @@ def edit_owner(id):
 
 @app.route('/update_owner/<string:id>', methods=['GET', 'POST'])
 def update_owner(id):
-    if request.method == 'POST':
+    try:
+        if request.method == 'POST':
+            cur = db.connection.cursor()
+            fname = request.form['fname']
+            lname = request.form['lname']
+            address = request.form['address']
+            phone = request.form['phone']
+            if len(phone) != 10:
+                cur.execute("SELECT * FROM Owner WHERE ssn={0}".format(id))
+                data = cur.fetchall()
+                flash("Incorrect phone number format")
+                return render_template('edit-owner.html', owner=data[0])
+            query = "UPDATE Owner SET first_name='{0}', last_name='{1}', address='{2}', phone='{3}' WHERE ssn='{4}';".format(fname, lname, address, str(phone), id)
+            print(query)
+            cur.execute(query)
+            db.connection.commit()
+            flash("Owner Updated Successfully")
+            return redirect(url_for('Index'))
+    except Exception as e:
+        flash(str(e))
+        print(request.form)
         cur = db.connection.cursor()
-        fname = request.form['fname']
-        lname = request.form['lname']
-        address = request.form['address']
-        phone = request.form['phone']
-        if len(phone) != 10:
-            flash("Incorrect phone number format")
-            return render_template('edit-owner.html', owner=request.form)
-        query = "UPDATE Owner SET first_name='{0}', last_name='{1}', address='{2}', phone='{3}' WHERE ssn='{4}';".format(fname, lname, address, str(phone), id)
-        print(query)
-        cur.execute(query)
-        db.connection.commit()
-        flash("Owner Updated Successfully")
-    return redirect(url_for('Index'))
+        cur.execute("SELECT * FROM Owner WHERE ssn={0}".format(id))
+        data = cur.fetchall()
+        return render_template('edit-owner.html', owner=data[0])
 
 
 @app.route('/delete_owner/<id>', methods=['GET', 'POST'])
@@ -129,29 +145,44 @@ def delete_owner(id):
 
 @app.route('/add_gun', methods=['POST'])
 def add_gun():
-    if request.method == 'POST':
-        gun_type = request.form['type']
-        ssn = request.form['ssn']
-        serial = request.form['serial_number']
-        manufacturer = request.form['manufacturer']
-        model = request.form['model']
-        caliber = request.form['caliber']
-        country = request.form['country']
-        seller_name = request.form['seller']
-        seller_addr = request.form['seller_addr']
-        gun_query = "INSERT INTO Gun VALUES (" + str(serial) + ",'" + gun_type + "'," + str(ssn) + ",'" + model + "','" + caliber + "');"
-        seller_query = "INSERT INTO Seller VALUES ('" + seller_name + "','" + seller_addr + "'," + ssn + "," + serial + ");"
-        manufacturer_query = "INSERT IGNORE INTO Manufacturer VALUES ('" + manufacturer + "','" + country + "','" + model + "','" + caliber + "');"
-        cur = db.connection.cursor()
-        cur.execute(gun_query)
-        db.connection.commit()
-        cur.execute(seller_query)
-        db.connection.commit()
-        #pk_check = cur.execute("SELECT EXISTS (SELECT * FROM Manufacturer WHERE model='" + str(model) + "');")
-        cur.execute(manufacturer_query)
-        db.connection.commit()
-        flash('New Firearm Registered')
-        return render_template('index.html')
+    try:
+        if request.method == 'POST':
+            cur = db.connection.cursor()
+            gun_type = request.form['type']
+            ssn = request.form['ssn']
+            serial = request.form['serial_number']
+            manufacturer = request.form['manufacturer']
+            model = request.form['model']
+            caliber = request.form['caliber']
+            country = request.form['country']
+            seller_name = request.form['seller']
+            seller_addr = request.form['seller_addr']
+            ssn_query = "SELECT EXISTS (SELECT * FROM Gun, Owner WHERE Owner.ssn={0});".format(ssn)
+            cur.execute(ssn_query)
+            response = cur.fetchall()
+            ssn_check = list(response[0].values())
+            print(ssn_check[0])
+            if len(ssn) != 9:
+                flash("Incorrect SSN format")
+                return redirect(url_for('Index'))
+            if not ssn_check[0]:
+                flash("Social Security Number not in Database")
+                return redirect(url_for('Index'))
+            gun_query = "INSERT INTO Gun VALUES (" + str(serial) + ",'" + gun_type + "'," + str(ssn) + ",'" + model + "','" + caliber + "');"
+            seller_query = "INSERT INTO Seller VALUES ('" + seller_name + "','" + seller_addr + "'," + ssn + "," + serial + ");"
+            manufacturer_query = "INSERT IGNORE INTO Manufacturer VALUES ('" + manufacturer + "','" + country + "','" + model + "','" + caliber + "');"
+            cur.execute(gun_query)
+            db.connection.commit()
+            cur.execute(seller_query)
+            db.connection.commit()
+            cur.execute(manufacturer_query)
+            db.connection.commit()
+            flash('New Firearm Registered')
+            return redirect(url_for('Index'))
+    except Exception as e:
+        flash(str(e))
+        return redirect(url_for('Index'))
+
 
 @app.route('/edit_gun/<string:id>', methods = ['POST', 'GET'])
 def edit_gun(id):
@@ -165,26 +196,35 @@ def edit_gun(id):
 
 @app.route('/update_gun/<string:id>', methods = ['POST', 'GET'])
 def update_gun(id):
-    if request.method == 'POST':
-        print(str(request.form))
+    try:
+        if request.method == 'POST':
+            print(str(request.form))
+            cur = db.connection.cursor()
+            gun_type = request.form['type']
+            model = request.form['model']
+            caliber = request.form['caliber']
+            serial = eval(str(id))
+            print(type(model))
+            cur.execute("SELECT * FROM Manufacturer WHERE model = (SELECT model FROM Gun WHERE serial_number={0});".format(id))
+            manu_data = cur.fetchall()
+            db.connection.commit()
+            gun_query = "UPDATE Gun SET type='" + gun_type + "', model='" + str(model) + "', caliber='" + str(caliber) + "' WHERE serial_number={0};".format(serial)
+            cur.execute(gun_query)
+            db.connection.commit()
+            print(manu_data[0]['name'])
+            manufacturer_query = "INSERT IGNORE INTO Manufacturer VALUES ('" + manu_data[0]['name'] + "','" + manu_data[0]['country_of_origin'] + "','" + model + "','" + caliber + "');"
+            cur.execute(manufacturer_query)
+            db.connection.commit()
+            flash("Gun updated successfully")
+            return redirect(url_for('Index'))
+    except Exception as e:
         cur = db.connection.cursor()
-        gun_type = request.form['type']
-        model = request.form['model']
-        caliber = request.form['caliber']
-        serial = eval(str(id))
-        print(type(model))
         cur.execute("SELECT * FROM Manufacturer WHERE model = (SELECT model FROM Gun WHERE serial_number={0});".format(id))
-        manu_data = cur.fetchall()
+        data = cur.fetchall()
         db.connection.commit()
-        gun_query = "UPDATE Gun SET type='" + gun_type + "', model='" + str(model) + "', caliber='" + str(caliber) + "' WHERE serial_number={0};".format(serial)
-        cur.execute(gun_query)
-        db.connection.commit()
-        print(manu_data[0]['name'])
-        manufacturer_query = "INSERT IGNORE INTO Manufacturer VALUES ('" + manu_data[0]['name'] + "','" + manu_data[0]['country_of_origin'] + "','" + model + "','" + caliber + "');"
-        cur.execute(manufacturer_query)
-        db.connection.commit()
-        flash("Gun updated successfully")
-        return render_template('index.html')
+        print(str(e))
+        return render_template('edit-gun.html', gun=data[0])
+
 
 @app.route('/delete_gun/<string:id>', methods=['GET', 'POST'])
 def delete_gun(id):
