@@ -13,7 +13,7 @@ app.config['MYSQL_HOST'] = 'freedb.tech'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 db = MySQL(app)
 # settings
-app.secret_key = "mysecretkey"
+#app.secret_key = "mysecretkey"
 
 #W(D4@#]Nu>T?|e^c
 
