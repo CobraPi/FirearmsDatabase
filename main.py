@@ -6,10 +6,10 @@ import json
 app = Flask(__name__)
 
 # Mysql Connection
-app.config['MYSQL_USER'] = 'sql9381394'
-app.config['MYSQL_PASSWORD'] = 'T2kcIdSRiK'#bldMH5YFcg'
-app.config['MYSQL_DB'] = 'sql9381394'#'sql9380119'
-app.config['MYSQL_HOST'] = 'sql9.freemysqlhosting.net'
+app.config['MYSQL_USER'] = 'freedbtech_firedbsql'
+app.config['MYSQL_PASSWORD'] = 'T2kcIdSRi'#bldMH5YFcg'
+app.config['MYSQL_DB'] = 'freedbtech_FirearmsDatabase'#'sql9380119'
+app.config['MYSQL_HOST'] = 'freedb.tech'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 db = MySQL(app)
 # settings
